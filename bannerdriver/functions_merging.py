@@ -3,12 +3,21 @@ import os
 
 # Conditional import to avoid circular dependency issues
 if TYPE_CHECKING:
-    from bannerdriver.driver import BannerDriver
+    from bannerdriver.drivers.driver_base import BannerDriver
 
 SCRIPT_NAMES = {
     "get_emails": "get_emails.js",
     "add_emails": "add_emails.js",
     "delete_emails": "delete_emails.js",
+    "get_phone_numbers": "get_phone_numbers.js",
+    "add_phone_numbers": "add_phone_numbers.js",
+    "delete_phone_numbers": "delete_phone_numbers.js",
+    "get_addresses": "get_addresses.js",
+    "add_addresses": "add_addresses.js",
+    "delete_addresses": "delete_addresses.js",
+    "get_test_scores": "get_test_scores.js",
+    "add_test_scores": "add_test_scores.js",
+    "delete_test_scores": "delete_test_scores.js",
     # Add more scripts as needed
 }
 
@@ -43,3 +52,12 @@ def execute_js(manager: "BannerDriver", script_name: str) -> None | str:
     except Exception as e:
         print(type(e))
         raise Exception(f"Error executing the script '{script_file}': {e}")
+
+
+def switch_to_tab(tab_name: str) -> None:
+    # TODO: write some JavaScript code to switch to a tab by name
+    ...
+
+
+def save_changes() -> None:
+    ...
