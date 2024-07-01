@@ -4,7 +4,7 @@ import shutil
 import glob
 import os
 
-from .sqlite_manager import SQLiteManager
+from .sqlite import SQLiteManager
 from .models import Base
 
 
