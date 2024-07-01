@@ -2,17 +2,23 @@ from selenium.common import TimeoutException, NoSuchElementException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
+from typing import TYPE_CHECKING
+import time
 
-from bannerdriver.driver import BannerDriver
+# ridiculous hack to get around circular imports
+if TYPE_CHECKING:
+    from bannerdriver.driver import BannerDriver
 
 
-def nav_to_login(manager: BannerDriver):
+def nav_to_login(manager: "BannerDriver", timeout: int | None = None):
     """
     Navigate to the login page
     :param manager: BannerDriver object
+    :param timeout: timeout in seconds
     """
     driver = manager.get_driver()
-    timeout = manager.timeout
+    if not timeout:
+        timeout = manager.timeout
     env = manager.env
     driver.get(f"https://{env}banner.montana.edu/"
                "applicationNavigator/seamless")
@@ -22,10 +28,11 @@ def nav_to_login(manager: BannerDriver):
         EC.visibility_of_element_located((By.ID, "password")))
 
 
-def enter_credentials(manager: BannerDriver):
+def enter_credentials(manager: "BannerDriver", timeout: int | None = None):
     """
     Enter the username and password into the login form
     :param manager: BannerDriver object
+    :param timeout: timeout in seconds
     :return: None
     """
     driver = manager.get_driver()
@@ -48,7 +55,8 @@ def enter_credentials(manager: BannerDriver):
         return ""
 
     # Enter the username and password
-    timeout = manager.timeout
+    if not timeout:
+        timeout = manager.timeout
     username = manager.username
     password = manager.password
     input_username = WebDriverWait(driver, timeout).until(
@@ -65,34 +73,24 @@ def enter_credentials(manager: BannerDriver):
         print(f"Error: {e}")
         driver.quit()
     WebDriverWait(driver, timeout).until(
-        EC.title_is("Two-Factor Authentication"))
+        EC.title_is("Duo Security"))
 
 
-def handle_2fa(manager: BannerDriver, method="push"):
+def handle_2fa(manager: "BannerDriver", timeout: int | None = None):
     """
     Handle the 2FA process
     :param manager: BannerDriver object
     :param method: "push", "sms", or "call"
+    :param timeout: timeout in seconds
     :return: None
     """
     driver = manager.get_driver()
-    timeout = manager.timeout
-    WebDriverWait(driver, timeout).until(
-        EC.title_is("Two-Factor Authentication"))
-    if method == "push":
-        print("Please accept the push notification on your phone")
-        xpath = "//button[text()='Send Me a Push ']"
-        button = WebDriverWait(driver, 300).until(
-            EC.element_to_be_clickable((By.XPATH, xpath)))
-        button.click()
-    elif method == "sms":
-        # TODO: Implement SMS 2FA
-        ...
-    elif method == "call":
-        # TODO: Implement Call 2FA
-        ...
-    else:
-        raise ValueError("Invalid 2FA method")
+    if not timeout:
+        timeout = manager.timeout
+    # trust the browser
+    btn_trust = WebDriverWait(driver, timeout).until(
+        EC.element_to_be_clickable((By.ID, "trust-browser-button")))
+    btn_trust.click()
 
     # Wait for the user to complete the 2FA process
     WebDriverWait(driver, timeout).until(
