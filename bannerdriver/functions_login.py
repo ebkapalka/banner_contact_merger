@@ -7,7 +7,7 @@ import time
 
 # ridiculous hack to get around circular imports
 if TYPE_CHECKING:
-    from bannerdriver.driver import BannerDriver
+    from bannerdriver.drivers.driver_base import BannerDriver
 
 
 def nav_to_login(manager: "BannerDriver", timeout: int | None = None):
