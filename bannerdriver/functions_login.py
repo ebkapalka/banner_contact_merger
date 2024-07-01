@@ -6,6 +6,22 @@ from selenium.webdriver.common.by import By
 from bannerdriver.driver import BannerDriver
 
 
+def nav_to_login(manager: BannerDriver):
+    """
+    Navigate to the login page
+    :param manager: BannerDriver object
+    """
+    driver = manager.get_driver()
+    timeout = manager.timeout
+    env = manager.env
+    driver.get(f"https://{env}banner.montana.edu/"
+               "applicationNavigator/seamless")
+    WebDriverWait(driver, timeout).until(
+        EC.visibility_of_element_located((By.ID, "username")))
+    WebDriverWait(driver, timeout).until(
+        EC.visibility_of_element_located((By.ID, "password")))
+
+
 def enter_credentials(manager: BannerDriver):
     """
     Enter the username and password into the login form
