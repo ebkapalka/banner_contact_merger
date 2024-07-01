@@ -6,18 +6,32 @@ from command_queue.sqlite import SQLiteManager
 
 
 class BannerDriver(ABC):
-    def __init__(self, username: str, password: str, name: str,
-                 queue: SQLiteManager, env="prod", timeout=10):
+    def __init__(self, username: str, password: str,
+                 queue: SQLiteManager, gid: str, env="prod",
+                 timeout=10):
         self.username = username
         self.password = password
-        self.name = name
         self.queue = queue
+        self.gid = gid
         self.env = env
         self.timeout = timeout
-        self.options = webdriver.ChromeOptions()
-        # self.options.add_argument('--headless')
-        self.driver = None
 
+        # disable autofill prompt
+        self.options = webdriver.ChromeOptions()
+        prefs = {
+            'profile.default_content_setting_values.automatic_downloads': 1,
+            'profile.password_manager_enabled': False,
+            'credentials_enable_service': False,
+            'autofill.profile_enabled': False,
+        }
+        self.options.add_experimental_option('prefs', prefs)
+        self.options.add_argument("--disable-save-password-bubble")
+        self.options.add_argument("--disable-autofill-keyboard-accessory-view")
+        self.options.add_argument("--disable-prompt-on-repost")
+        self.options.add_argument("--disable-autofill")
+
+        # initialize the driver and log in
+        self.driver = None
         nav_to_login(self, timeout=300)
         enter_credentials(self, timeout=300)
         handle_2fa(self, timeout=300)
