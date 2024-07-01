@@ -3,22 +3,25 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium import webdriver
 
-from bannerdriver.functions import enter_credentials, handle_2fa
+from bannerdriver.functions_login import enter_credentials, handle_2fa, nav_to_login
+from command_queue.sqlite import SQLiteManager
 
 
 class BannerDriver:
-    def __init__(self, username: str, password: str, env="prod", timeout=10):
+    def __init__(self, username: str, password: str,
+                 queue: SQLiteManager, env="prod", timeout=10):
         self.username = username
         self.password = password
+        self.queue = queue
         self.env = env
         self.timeout = timeout
         self.options = webdriver.ChromeOptions()
         self.options.add_argument('--headless')
         self.driver = None
 
-        self._nav_to_login()
+        nav_to_login(self)
         enter_credentials(self)
-        handle_2fa()
+        handle_2fa(self)
 
     def get_driver(self) -> webdriver:
         """
@@ -30,12 +33,5 @@ class BannerDriver:
                 options=self.options)
         return self.driver
 
-    def _nav_to_login(self):
-        driver = self.get_driver()
-        driver.get(f"https://{self.env}banner.montana.edu/"
-                        "applicationNavigator/seamless")
-        WebDriverWait(driver, self.timeout).until(
-            EC.visibility_of_element_located((By.ID, "username")))
-        WebDriverWait(driver, self.timeout).until(
-            EC.visibility_of_element_located((By.ID, "password")))
+
 # grdSortest
