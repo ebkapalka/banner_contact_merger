@@ -8,20 +8,21 @@ from command_queue.sqlite import SQLiteManager
 
 
 class BannerDriver:
-    def __init__(self, username: str, password: str,
+    def __init__(self, username: str, password: str, name: str,
                  queue: SQLiteManager, env="prod", timeout=10):
         self.username = username
         self.password = password
+        self.name = name
         self.queue = queue
         self.env = env
         self.timeout = timeout
         self.options = webdriver.ChromeOptions()
-        self.options.add_argument('--headless')
+        # self.options.add_argument('--headless')
         self.driver = None
 
-        nav_to_login(self)
-        enter_credentials(self)
-        handle_2fa(self)
+        nav_to_login(self, timeout=300)
+        enter_credentials(self, timeout=300)
+        handle_2fa(self, timeout=300)
 
     def get_driver(self) -> webdriver:
         """
