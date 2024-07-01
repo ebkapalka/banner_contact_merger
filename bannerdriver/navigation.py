@@ -6,16 +6,19 @@ from selenium.webdriver.common.by import By
 from selenium import webdriver
 import time
 
+from bannerdriver.driver import BannerDriver
 
-def nav_to_form(driver: webdriver, form: str, timeout=20) -> None:
+
+def nav_to_form(manager: BannerDriver, form: str) -> None:
     """
     Navigate to the specified form page
-    :param driver: webdriver object
+    :param manager: BannerDriver object
     :param form: form to navigate to
-    :param timeout: timeout in seconds
     :return: None
     """
-    env = _get_env(driver)
+    driver = manager.get_driver()
+    timeout = manager.timeout
+    env = _get_env(manager)
     form = form.upper().strip()
     driver.get(f"https://{env}.montana.edu/BannerAdmin?form={form}")
     selector = (By.XPATH, f"//h2[contains(text(), '{form}')]")
@@ -34,13 +37,14 @@ def nav_to_form(driver: webdriver, form: str, timeout=20) -> None:
             return
 
 
-def get_current_form(driver: webdriver, timeout=5) -> str:
+def get_current_form(manager: BannerDriver) -> str:
     """
     Get the current form name
-    :param driver: webdriver object
-    :param timeout: timeout in seconds
+    :param manager: BannerDriver object
     :return: the name of the current form
     """
+    driver = manager.get_driver()
+    timeout = manager.timeout
     try:
         selector = (By.XPATH, "(//h2[@class='workspace-title'])")
         elem = WebDriverWait(driver, timeout).until(
@@ -55,15 +59,16 @@ def get_current_form(driver: webdriver, timeout=5) -> str:
     return ""
 
 
-def enter_gid(driver: webdriver, gid: str, max_tries=10, timeout=10):
+def enter_gid(manager: BannerDriver, gid: str, max_tries=10):
     """
     Enter the GID into the input box
-    :param driver: webdriver object
+    :param manager: BannerDriver object
     :param gid: gid to enter
     :param max_tries: maximum number of tries before giving up
-    :param timeout: timeout in seconds
     :return: None
     """
+    driver = manager.get_driver()
+    timeout = manager.timeout
     input_gid = WebDriverWait(driver, timeout).until(
         EC.visibility_of_element_located((By.ID, "inp:key_block_id")))
     input_gid.clear()
@@ -88,12 +93,14 @@ def enter_gid(driver: webdriver, gid: str, max_tries=10, timeout=10):
     print("Could not enter GID")
 
 
-def _get_env(driver: webdriver) -> str:
+def _get_env(driver: webdriver | BannerDriver) -> str:
     """
     Get the environment from the current URL
-    :param driver: webdriver object
+    :param driver: webdriver or BannerDriver object
     :return: the current Banner environment
     """
+    if isinstance(driver, BannerDriver):
+        driver = driver.get_driver()
     entire_url = driver.current_url
     base_url = entire_url.split("//")[1]
     return base_url.split('.')[0]
