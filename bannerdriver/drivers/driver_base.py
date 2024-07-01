@@ -1,13 +1,11 @@
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.common.by import By
+from abc import ABC, abstractmethod
 from selenium import webdriver
 
 from bannerdriver.functions_login import enter_credentials, handle_2fa, nav_to_login
 from command_queue.sqlite import SQLiteManager
 
 
-class BannerDriver:
+class BannerDriver(ABC):
     def __init__(self, username: str, password: str, name: str,
                  queue: SQLiteManager, env="prod", timeout=10):
         self.username = username
@@ -34,5 +32,10 @@ class BannerDriver:
                 options=self.options)
         return self.driver
 
-
-# grdSortest
+    @abstractmethod
+    def main_loop(self) -> None:
+        """
+        Main loop for the BannerDriver
+        :return: None
+        """
+        pass
