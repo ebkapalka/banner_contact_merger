@@ -6,7 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium import webdriver
 import time
 
-from bannerdriver.driver import BannerDriver
+from bannerdriver.drivers.driver_base import BannerDriver
 
 
 def nav_to_form(manager: BannerDriver, form: str) -> None:
