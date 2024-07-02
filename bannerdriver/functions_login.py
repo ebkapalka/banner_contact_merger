@@ -80,13 +80,13 @@ def handle_2fa(manager: "BannerDriver", timeout: int | None = None):
     """
     Handle the 2FA process
     :param manager: BannerDriver object
-    :param method: "push", "sms", or "call"
     :param timeout: timeout in seconds
     :return: None
     """
     driver = manager.get_driver()
     if not timeout:
         timeout = manager.timeout
+
     # trust the browser
     btn_trust = WebDriverWait(driver, timeout).until(
         EC.element_to_be_clickable((By.ID, "trust-browser-button")))
