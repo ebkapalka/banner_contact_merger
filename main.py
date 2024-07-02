@@ -38,7 +38,7 @@ def start_bad_worker(username: str, password: str, db_uri: str, gid: str, env: s
 
 if __name__ == '__main__':
     good_gid = '-02179809'
-    bad_gid = '-02179899'
+    # bad_gid = '-02179899'
     queue_db_uri = "sqlite:///command_queue/db.sqlite"
     environment = os.environ.get("BANNER_ENV", 'prod')
     banner_username = os.environ.get("BANNER_USERNAME")
@@ -50,13 +50,13 @@ if __name__ == '__main__':
                                                  queue_db_uri,
                                                  good_gid,
                                                  environment))
-    bad_process = multiprocessing.Process(target=start_bad_worker,
-                                          args=(banner_username,
-                                                banner_password,
-                                                queue_db_uri,
-                                                bad_gid,
-                                                environment))
+    # bad_process = multiprocessing.Process(target=start_bad_worker,
+    #                                       args=(banner_username,
+    #                                             banner_password,
+    #                                             queue_db_uri,
+    #                                             bad_gid,
+    #                                             environment))
     good_process.start()
-    bad_process.start()
+    # bad_process.start()
     good_process.join()
-    bad_process.join()
+    # bad_process.join()
