@@ -1,9 +1,9 @@
 from selenium.common import (TimeoutException, NoSuchElementException,
                              StaleElementReferenceException)
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
-from selenium import webdriver
 import time
 
 from bannerdriver.drivers.driver_base import BannerDriver
@@ -93,7 +93,7 @@ def enter_gid(manager: BannerDriver, gid: str, max_tries=10):
     print("Could not enter GID")
 
 
-def _get_env(driver: webdriver | BannerDriver) -> str:
+def _get_env(driver: WebDriver | BannerDriver) -> str:
     """
     Get the environment from the current URL
     :param driver: webdriver or BannerDriver object
