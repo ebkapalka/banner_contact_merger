@@ -1,3 +1,4 @@
+from selenium.webdriver.remote.webdriver import WebDriver
 from abc import ABC, abstractmethod
 from selenium import webdriver
 
@@ -36,7 +37,7 @@ class BannerDriver(ABC):
         enter_credentials(self, timeout=300)
         handle_2fa(self, timeout=300)
 
-    def get_driver(self) -> webdriver:
+    def get_driver(self) -> WebDriver:
         """
         Get the Selenium WebDriver object
         :return: webdriver object
