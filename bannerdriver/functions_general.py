@@ -1,13 +1,10 @@
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
-from typing import TYPE_CHECKING
-from selenium import webdriver
 import os
 
-# Conditional import to avoid circular dependency issues
-if TYPE_CHECKING:
-    from bannerdriver.drivers.driver_base import BannerDriver
+from bannerdriver.drivers.driver_base import BannerDriver
 
 SCRIPT_NAMES = {
     "get_emails": "get_emails.js",
@@ -26,7 +23,7 @@ SCRIPT_NAMES = {
 }
 
 
-def execute_js(driver: webdriver | "BannerDriver", script_name: str) -> None | str:
+def execute_js(driver: WebDriver | BannerDriver, script_name: str) -> None | str:
     """
     Executes a JavaScript file on the current page using Selenium WebDriver.
     :param driver: webdriver or BannerDriver object
@@ -37,6 +34,7 @@ def execute_js(driver: webdriver | "BannerDriver", script_name: str) -> None | s
     :return: Result of the executed script or None.
     """
     driver = _get_driver(driver)
+    _switch_iframe(driver)
     script_file = SCRIPT_NAMES.get(script_name)
 
     if not script_file:
@@ -59,7 +57,7 @@ def execute_js(driver: webdriver | "BannerDriver", script_name: str) -> None | s
         raise Exception(f"Error executing the script '{script_file}': {e}")
 
 
-def update_input_value(driver: webdriver | "BannerDriver", element_name: str, new_text: str) -> None:
+def update_input_value(driver: WebDriver | BannerDriver, element_name: str, new_text: str) -> None:
     """
     Update the value of an input element in a Banner form.
     :param driver: webdriver or BannerDriver object
@@ -69,105 +67,86 @@ def update_input_value(driver: webdriver | "BannerDriver", element_name: str, ne
     """
     script = f"""
     (function(){{
-        // Access the iframe
-        var iframe = document.querySelector('iframe[name="bannerHS"]');
-        if (iframe) {{
-            var doc = iframe.contentDocument || iframe.contentWindow.document;
-            // Function to check if an element is visible
-            function isVisible(element) {{
-                return !!(element.offsetWidth || element.offsetHeight || element.getClientRects().length);
-            }}
-            // Find all div elements with data-widget="textinput"
-            var divs = doc.querySelectorAll('div[data-widget="textinput"]');
-            var labelToFind = '{element_name}';
-            var data = {{}};
-            var labelCount = {{}};
-            divs.forEach(function(div) {{
-                if (isVisible(div)) {{
-                    var label = div.querySelector(':scope > label');
-                    var input = div.querySelector(':scope > input');
-                    if (label && input) {{
-                        var labelText = label.innerText.trim();
-                        if (labelCount[labelText] === undefined) {{
-                            labelCount[labelText] = 0;
-                        }}
-                        labelCount[labelText]++;
-                        var labelKey = labelText;
-                        if (labelCount[labelText] > 1) {{
-                            labelKey = labelText + '_' + labelCount[labelText];
-                        }}
-                        data[labelKey] = input;
-                    }}
-                }}
-            }});
-            // Update the input value for the specified label
-            if (data[labelToFind]) {{
-                data[labelToFind].value = '{new_text}';
-            }} else {{
-                console.error('Label not found.');
-            }}
-            // Print out the dictionary of label texts and input elements for debugging
-            console.log('Data:', data);
-        }} else {{
-            console.error('Iframe not found.');
+        function isVisible(element) {{
+            return !!(element.offsetWidth || element.offsetHeight || element.getClientRects().length);
         }}
+        var divs = document.querySelectorAll('div[data-widget="textinput"]');
+        var labelToFind = '{element_name}';
+        var data = {{}};
+        var labelCount = {{}};
+        divs.forEach(function(div) {{
+            if (isVisible(div)) {{
+                var label = div.querySelector(':scope > label');
+                var input = div.querySelector(':scope > input');
+                if (label && input) {{
+                    var labelText = label.innerText.trim();
+                    if (labelCount[labelText] === undefined) {{
+                        labelCount[labelText] = 0;
+                    }}
+                    labelCount[labelText]++;
+                    var labelKey = labelText;
+                    if (labelCount[labelText] > 1) {{
+                        labelKey = labelText + '_' + labelCount[labelText];
+                    }}
+                    data[labelKey] = input;
+                }}
+            }}
+        }});
+        if (data[labelToFind]) {{
+            data[labelToFind].value = '{new_text}';
+        }} else {{
+            console.error('Label not found.');
+        }}
+        console.log('Data:', data);
     }})();
     """
     driver = _get_driver(driver)
+    _switch_iframe(driver)
     driver.execute_script(script)
 
 
-def extract_input_values(driver: webdriver | "BannerDriver") -> dict[str, str]:
+def extract_input_values(driver: WebDriver | BannerDriver) -> dict[str, str]:
     """
     Extract the values of all input elements in a Banner form.
     :param driver: webdriver object
     :return: dict of label text to input elem value
     """
     script = """
-    return (function(){{
-        // Access the iframe
-        var iframe = document.querySelector('iframe[name="bannerHS"]');
-        if (iframe) {{
-            var doc = iframe.contentDocument || iframe.contentWindow.document;
-            // Function to check if an element is visible
-            function isVisible(element) {{
-                return !!(element.offsetWidth || element.offsetHeight || element.getClientRects().length);
-            }}
-            // Find all div elements with data-widget="textinput"
-            var divs = doc.querySelectorAll('div[data-widget="textinput"]');
-            var data = {{}};
-            var labelCount = {{}};
-            divs.forEach(function(div) {{
-                if (isVisible(div)) {{
-                    var label = div.querySelector(':scope > label');
-                    var input = div.querySelector(':scope > input');
-                    if (label && input) {{
-                        var labelText = label.innerText.trim();
-                        if (labelCount[labelText] === undefined) {{
-                            labelCount[labelText] = 0;
-                        }}
-                        labelCount[labelText]++;
-                        var labelKey = labelText;
-                        if (labelCount[labelText] > 1) {{
-                            labelKey = labelText + '_' + labelCount[labelText];
-                        }}
-                        data[labelKey] = input.value;
-                    }}
-                }}
-            }});
-            return data;
-        }} else {{
-            console.error('Iframe not found.');
-            return {{}};
-        }}
-    }})();
+    return (function() {
+        function isVisible(element) {
+            return !!(element.offsetWidth || element.offsetHeight || element.getClientRects().length);
+        }
+        var divs = document.querySelectorAll('div[data-widget="textinput"]');
+        var data = {};
+        var labelCount = {};
+        divs.forEach(function(div) {
+            if (isVisible(div)) {
+                var label = div.querySelector(':scope > label');
+                var input = div.querySelector(':scope > input');
+                if (label && input) {
+                    var labelText = label.innerText.trim();
+                    if (labelCount[labelText] === undefined) {
+                        labelCount[labelText] = 0;
+                    }
+                    labelCount[labelText]++;
+                    var labelKey = labelText;
+                    if (labelCount[labelText] > 1) {
+                        labelKey = labelText + '_' + labelCount[labelText];
+                    }
+                    data[labelKey] = input.value;
+                }
+            }
+        });
+        return data;
+    })();
     """
     driver = _get_driver(driver)
+    _switch_iframe(driver)
     result = driver.execute_script(script)
     return result
 
 
-def switch_to_tab(driver: webdriver | "BannerDriver", tab_name: str) -> bool:
+def switch_to_tab(driver: WebDriver | BannerDriver, tab_name: str) -> bool:
     """
     Switches to a tab in a Banner form.
     :param driver: webdriver object
@@ -177,12 +156,8 @@ def switch_to_tab(driver: webdriver | "BannerDriver", tab_name: str) -> bool:
     script = f"""
     return (function() {{
         function switchToTab(tabName) {{
-            var iframe = document.querySelector('iframe[name="bannerHS"]');
-            if (!iframe) return false;
-
             try {{
-                var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                var tabLists = iframeDoc.querySelectorAll('ul[role="tablist"]');
+                var tabLists = document.querySelectorAll('ul[role="tablist"]');
                 var tabList = null;
                 for (var i = 0; i < tabLists.length; i++) {{
                     if (tabLists[i].offsetParent !== null) {{
@@ -191,7 +166,7 @@ def switch_to_tab(driver: webdriver | "BannerDriver", tab_name: str) -> bool:
                     }}
                 }}
                 if (!tabList) return false;
-
+    
                 var tabs = tabList.getElementsByTagName('li');
                 for (var i = 0; i < tabs.length; i++) {{
                     var anchor = tabs[i].querySelector('a.ui-tabs-anchor');
@@ -202,20 +177,21 @@ def switch_to_tab(driver: webdriver | "BannerDriver", tab_name: str) -> bool:
                 }}
                 return false;
             }} catch (e) {{
-                console.error('Error accessing iframe content:', e);
+                console.error('Error accessing tab content:', e);
                 return false;
             }}
         }}
-
+    
         var defaultTabName = '{tab_name}';
         return switchToTab(defaultTabName);
     }})();
     """
     driver = _get_driver(driver)
+    _switch_iframe(driver)
     return driver.execute_script(script)
 
 
-def save_changes(driver: webdriver | "BannerDriver") -> None:
+def save_changes(driver: WebDriver | BannerDriver) -> None:
     """
     Clicks the 'Save' button on a Banner form.
     :param driver: webdriver or BannerDriver object
@@ -223,6 +199,7 @@ def save_changes(driver: webdriver | "BannerDriver") -> None:
     """
     try:
         driver = _get_driver(driver)
+        _switch_iframe(driver)
         save_button = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.ID, "save-bt"))
         )
@@ -231,11 +208,29 @@ def save_changes(driver: webdriver | "BannerDriver") -> None:
         print(f"An error occurred: {e}")
 
 
-def _get_driver(driver: webdriver | "BannerDriver") -> webdriver:
+def _get_driver(driver: WebDriver | BannerDriver) -> WebDriver:
     """
     Get the Selenium WebDriver object
     :return: webdriver object
     """
-    if isinstance(driver, webdriver):
+    if isinstance(driver, WebDriver):
         return driver
     return driver.get_driver()
+
+
+def _switch_iframe(driver: WebDriver | BannerDriver, frame_id="bannerHS") -> None:
+    """
+    Switch to the iframe containing the Banner form
+    :param driver: webdriver or BannerDriver object
+    :param frame_id: ID of the iframe, default is 'bannerHS'
+    :return: None
+    """
+    driver = _get_driver(driver)
+    try:
+        current_frame = driver.execute_script("return window.frameElement ? window.frameElement.id : null;")
+        if current_frame == frame_id:
+            return
+        iframe = driver.find_element(By.ID, frame_id)
+        driver.switch_to.frame(iframe)
+    except:
+        driver.switch_to.default_content()
