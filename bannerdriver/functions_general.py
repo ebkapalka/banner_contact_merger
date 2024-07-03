@@ -7,18 +7,19 @@ import os
 from bannerdriver.drivers.driver_base import BannerDriver
 
 SCRIPT_NAMES = {
-    "get_emails": "get_emails.js",
-    "add_emails": "add_emails.js",
-    "delete_emails": "delete_emails.js",
-    "get_phone_numbers": "get_phone_numbers.js",
-    "add_phone_numbers": "add_phone_numbers.js",
-    "delete_phone_numbers": "delete_phone_numbers.js",
-    "get_addresses": "get_addresses.js",
-    "add_addresses": "add_addresses.js",
-    "delete_addresses": "delete_addresses.js",
-    "get_test_scores": "get_test_scores.js",
-    "add_test_scores": "add_test_scores.js",
-    "delete_test_scores": "delete_test_scores.js",
+    "get_emails": "bannerdriver/js_scripts/get_emails.js",
+    "add_emails": "bannerdriver/js_scripts/add_emails.js",
+    "delete_emails": "bannerdriver/js_scripts/delete_emails.js",
+    "get_phone_numbers": "bannerdriver/js_scripts/get_phone_numbers.js",
+    "add_phone_numbers": "bannerdriver/js_scripts/add_phone_numbers.js",
+    "delete_phone_numbers": "bannerdriver/js_scripts/delete_phone_numbers.js",
+    "get_addresses": "bannerdriver/js_scripts/get_addresses.js",
+    "add_addresses": "bannerdriver/js_scripts/add_addresses.js",
+    "delete_addresses": "bannerdriver/js_scripts/delete_addresses.js",
+    "get_test_scores": "bannerdriver/js_scripts/get_test_scores.js",
+    "add_test_scores": "bannerdriver/js_scripts/add_test_scores.js",
+    "delete_test_scores": "bannerdriver/js_scripts/delete_test_scores.js",
+    "delete_alt_ids": "bannerdriver/js_scripts/delete_alt_ids.js",
     # Add more scripts as needed
 }
 
@@ -66,11 +67,12 @@ def update_input_value(driver: WebDriver | BannerDriver, element_name: str, new_
     :return: None
     """
     script = f"""
-    (function(){{
+    (function() {{
         function isVisible(element) {{
-            return !!(element.offsetWidth || element.offsetHeight || element.getClientRects().length);
+            var style = window.getComputedStyle(element);
+            return style && style.display !== 'none' && style.visibility !== 'hidden' && element.offsetWidth > 0 && element.offsetHeight > 0;
         }}
-        var divs = document.querySelectorAll('div[data-widget="textinput"]');
+        var divs = document.querySelectorAll('div[data-widget="textinput"], div[data-widget="datefield"], div[data-widget="checkbox"]');
         var labelToFind = '{element_name}';
         var data = {{}};
         var labelCount = {{}};
@@ -78,7 +80,8 @@ def update_input_value(driver: WebDriver | BannerDriver, element_name: str, new_
             if (isVisible(div)) {{
                 var label = div.querySelector(':scope > label');
                 var input = div.querySelector(':scope > input');
-                if (label && input) {{
+                var button = div.querySelector(':scope > button');
+                if (label && (input || button)) {{
                     var labelText = label.innerText.trim();
                     if (labelCount[labelText] === undefined) {{
                         labelCount[labelText] = 0;
@@ -88,16 +91,28 @@ def update_input_value(driver: WebDriver | BannerDriver, element_name: str, new_
                     if (labelCount[labelText] > 1) {{
                         labelKey = labelText + '_' + labelCount[labelText];
                     }}
-                    data[labelKey] = input;
+                    data[labelKey] = {{ input: input, button: button }};
                 }}
             }}
         }});
         if (data[labelToFind]) {{
-            data[labelToFind].value = '{new_text}';
+            var elementData = data[labelToFind];
+            if (elementData.button && elementData.button.getAttribute('role') === 'checkbox') {{
+                var isChecked = elementData.button.getAttribute('aria-checked') === 'true';
+                var shouldCheck = { 'true' if new_text.lower() in ['true', 'checked'] else 'false' };
+                if (isChecked !== shouldCheck) {{
+                    elementData.button.click();
+                }}
+            }} else if (elementData.input) {{
+                var inputEvent = new Event('input', {{ bubbles: true }});
+                var changeEvent = new Event('change', {{ bubbles: true }});
+                elementData.input.value = '{new_text.replace("'", "\\'")}';
+                elementData.input.dispatchEvent(inputEvent);
+                elementData.input.dispatchEvent(changeEvent);
+            }}
         }} else {{
             console.error('Label not found.');
         }}
-        console.log('Data:', data);
     }})();
     """
     driver = _get_driver(driver)
@@ -114,9 +129,10 @@ def extract_input_values(driver: WebDriver | BannerDriver) -> dict[str, str]:
     script = """
     return (function() {
         function isVisible(element) {
-            return !!(element.offsetWidth || element.offsetHeight || element.getClientRects().length);
+            var style = window.getComputedStyle(element);
+            return style && style.display !== 'none' && style.visibility !== 'hidden' && element.offsetWidth > 0 && element.offsetHeight > 0;
         }
-        var divs = document.querySelectorAll('div[data-widget="textinput"]');
+        var divs = document.querySelectorAll('div[data-widget="textinput"], div[data-widget="datefield"], div[data-widget="checkbox"]');
         var data = {};
         var labelCount = {};
         divs.forEach(function(div) {
@@ -133,7 +149,13 @@ def extract_input_values(driver: WebDriver | BannerDriver) -> dict[str, str]:
                     if (labelCount[labelText] > 1) {
                         labelKey = labelText + '_' + labelCount[labelText];
                     }
-                    data[labelKey] = input.value;
+                    var inputValue;
+                    if (div.getAttribute('data-widget') === 'checkbox') {
+                        inputValue = input.checked ? 'checked' : 'unchecked';
+                    } else {
+                        inputValue = input.value;
+                    }
+                    data[labelKey] = inputValue;
                 }
             }
         });
@@ -146,15 +168,16 @@ def extract_input_values(driver: WebDriver | BannerDriver) -> dict[str, str]:
     return result
 
 
-def switch_to_tab(driver: WebDriver | BannerDriver, tab_name: str) -> bool:
+def switch_to_tab(driver: WebDriver | BannerDriver, tab_name: str, timeout=10) -> bool:
     """
     Switches to a tab in a Banner form.
     :param driver: webdriver object
     :param tab_name: tab name to switch to
+    :param timeout: maximum time to wait for the tab to switch
     :return: true if the tab was switched to, false otherwise
     """
     script = f"""
-    return (function() {{
+    return (async function() {{
         function switchToTab(tabName) {{
             try {{
                 var tabLists = document.querySelectorAll('ul[role="tablist"]');
@@ -165,25 +188,35 @@ def switch_to_tab(driver: WebDriver | BannerDriver, tab_name: str) -> bool:
                         break;
                     }}
                 }}
-                if (!tabList) return false;
+                if (!tabList) return null;
     
                 var tabs = tabList.getElementsByTagName('li');
                 for (var i = 0; i < tabs.length; i++) {{
                     var anchor = tabs[i].querySelector('a.ui-tabs-anchor');
                     if (anchor && anchor.textContent.trim() === tabName) {{
                         anchor.click();
-                        return true;
+                        return anchor;
                     }}
                 }}
-                return false;
+                return null;
             }} catch (e) {{
                 console.error('Error accessing tab content:', e);
-                return false;
+                return null;
             }}
         }}
     
         var defaultTabName = '{tab_name}';
-        return switchToTab(defaultTabName);
+        var anchor = switchToTab(defaultTabName);
+        if (!anchor) return false;
+
+        var startTime = performance.now();
+        while (performance.now() - startTime < {timeout} * 1000) {{
+            if (anchor.getAttribute('aria-selected') === 'true') {{
+                return true;
+            }}
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }}
+        return false;
     }})();
     """
     driver = _get_driver(driver)
@@ -227,7 +260,9 @@ def _switch_iframe(driver: WebDriver | BannerDriver, frame_id="bannerHS") -> Non
     """
     driver = _get_driver(driver)
     try:
-        current_frame = driver.execute_script("return window.frameElement ? window.frameElement.id : null;")
+        current_frame = driver.execute_script(
+            "return window.frameElement ? "
+            "window.frameElement.id : null;")
         if current_frame == frame_id:
             return
         iframe = driver.find_element(By.ID, frame_id)
