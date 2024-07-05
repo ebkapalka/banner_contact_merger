@@ -8,57 +8,6 @@ import os
 
 from bannerdriver.drivers.driver_base import BannerDriver
 
-SCRIPT_NAMES = {
-    "get_emails": "bannerdriver/js_scripts/get_emails.js",
-    "add_emails": "bannerdriver/js_scripts/add_emails.js",
-    "delete_emails": "bannerdriver/js_scripts/delete_emails.js",
-    "get_phone_numbers": "bannerdriver/js_scripts/get_phone_numbers.js",
-    "add_phone_numbers": "bannerdriver/js_scripts/add_phone_numbers.js",
-    "delete_phone_numbers": "bannerdriver/js_scripts/delete_phone_numbers.js",
-    "get_addresses": "bannerdriver/js_scripts/get_addresses.js",
-    "add_addresses": "bannerdriver/js_scripts/add_addresses.js",
-    "delete_addresses": "bannerdriver/js_scripts/delete_addresses.js",
-    "get_test_scores": "bannerdriver/js_scripts/get_test_scores.js",
-    "add_test_scores": "bannerdriver/js_scripts/add_test_scores.js",
-    "delete_test_scores": "bannerdriver/js_scripts/delete_test_scores.js",
-    "delete_alt_ids": "bannerdriver/js_scripts/delete_alt_ids.js",
-    # Add more scripts as needed
-}
-
-
-def execute_js(driver: WebDriver | BannerDriver, script_name: str) -> None | str:
-    """
-    Executes a JavaScript file on the current page using Selenium WebDriver.
-    :param driver: webdriver or BannerDriver object
-    :param script_name: Name of the JavaScript file to execute.
-    :raises ValueError: If the script name is invalid.
-    :raises FileNotFoundError: If the script file does not exist.
-    :raises Exception: If there is an error reading or executing the script.
-    :return: Result of the executed script or None.
-    """
-    driver = _get_driver(driver)
-    _switch_iframe(driver)
-    script_file = SCRIPT_NAMES.get(script_name)
-
-    if not script_file:
-        raise ValueError(f"Invalid script name '{script_name}'")
-    if not os.path.isfile(script_file):
-        raise FileNotFoundError(f"The script file '{script_file}' does not exist.")
-
-    try:
-        with open(script_file, 'r') as file:
-            js_script = file.read()
-    except Exception as e:
-        print(type(e))
-        raise Exception(f"Error reading the script file '{script_file}': {e}")
-    try:
-        # this is apparently synchronous
-        result = driver.execute_script(js_script)
-        return result
-    except Exception as e:
-        print(type(e))
-        raise Exception(f"Error executing the script '{script_file}': {e}")
-
 
 def update_input_value_legacy(driver, input_element, new_text):
     """
@@ -68,8 +17,8 @@ def update_input_value_legacy(driver, input_element, new_text):
     :param new_text: new text to enter into the input element
     :return: None
     """
-    driver = _get_driver(driver)
-    _switch_iframe(driver)
+    driver = get_driver(driver)
+    switch_iframe(driver)
     element_type = driver.execute_script(
         "return arguments[0].parentElement.getAttribute('data-widget')",
         input_element
@@ -105,8 +54,8 @@ def update_input_value(driver, input_element, new_text):
     :param new_text: new text to enter into the input element
     :return: None
     """
-    driver = _get_driver(driver)
-    _switch_iframe(driver)
+    driver = get_driver(driver)
+    switch_iframe(driver)
 
     element_type = driver.execute_script(
         "return arguments[0].parentElement.getAttribute('data-widget')",
@@ -231,8 +180,8 @@ def extract_input_values(driver):
         return data;
     })();
     """
-    driver = _get_driver(driver)
-    _switch_iframe(driver)
+    driver = get_driver(driver)
+    switch_iframe(driver)
     result = driver.execute_script(script)
     return result
 
@@ -288,8 +237,8 @@ def switch_to_tab(driver: WebDriver | BannerDriver, tab_name: str, timeout=10) -
         return false;
     }})();
     """
-    driver = _get_driver(driver)
-    _switch_iframe(driver)
+    driver = get_driver(driver)
+    switch_iframe(driver)
     return driver.execute_script(script)
 
 
@@ -300,8 +249,8 @@ def save_changes(driver: WebDriver | BannerDriver) -> None:
     :return: None
     """
     try:
-        driver = _get_driver(driver)
-        _switch_iframe(driver)
+        driver = get_driver(driver)
+        switch_iframe(driver)
         save_button = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.ID, "save-bt"))
         )
@@ -310,7 +259,7 @@ def save_changes(driver: WebDriver | BannerDriver) -> None:
         print(f"An error occurred: {e}")
 
 
-def _get_driver(driver: WebDriver | BannerDriver) -> WebDriver:
+def get_driver(driver: WebDriver | BannerDriver) -> WebDriver:
     """
     Get the Selenium WebDriver object
     :return: webdriver object
@@ -320,14 +269,14 @@ def _get_driver(driver: WebDriver | BannerDriver) -> WebDriver:
     return driver.get_driver()
 
 
-def _switch_iframe(driver: WebDriver | BannerDriver, frame_id="bannerHS") -> None:
+def switch_iframe(driver: WebDriver | BannerDriver, frame_id="bannerHS") -> None:
     """
     Switch to the iframe containing the Banner form
     :param driver: webdriver or BannerDriver object
     :param frame_id: ID of the iframe, default is 'bannerHS'
     :return: None
     """
-    driver = _get_driver(driver)
+    driver = get_driver(driver)
     try:
         current_frame = driver.execute_script(
             "return window.frameElement ? "
