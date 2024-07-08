@@ -1,3 +1,4 @@
+from bannerdriver.functions_js import initialize_scripts
 from bannerdriver.drivers.driver_good import GoodDriver
 from bannerdriver.drivers.driver_bad import BadDriver
 from command_queue.sqlite import SQLiteManager
@@ -38,7 +39,10 @@ def start_bad_worker(username: str, password: str, db_uri: str, gid: str, env: s
 
 if __name__ == '__main__':
     good_gid = '-02179809'
-    # bad_gid = '-02179899'
+    bad_gid = '-02179899'
+
+    config_file = "SCRIPT_PATHS.yaml"
+    initialize_scripts(config_file)
     queue_db_uri = "sqlite:///command_queue/db.sqlite"
     environment = os.environ.get("BANNER_ENV", 'prod')
     banner_username = os.environ.get("BANNER_USERNAME")
