@@ -1,15 +1,15 @@
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver import ActionChains, Keys
 from selenium.webdriver.common.by import By
 import time
-import os
 
 from bannerdriver.drivers.driver_base import BannerDriver
 
 
-def update_input_value_legacy(driver, input_element, new_text):
+def update_input_value_legacy(driver: WebDriver | BannerDriver, input_element: WebElement, new_text: str):
     """
     Update the value of an input element in a Banner form.
     :param driver: webdriver object
@@ -46,7 +46,7 @@ def update_input_value_legacy(driver, input_element, new_text):
         time.sleep(0.5)
 
 
-def update_input_value(driver, input_element, new_text):
+def update_input_value(driver: WebDriver | BannerDriver, input_element: WebElement, new_text: str):
     """
     Update the value of an input element in a Banner form using JavaScript only.
     :param driver: webdriver object
@@ -138,7 +138,7 @@ def update_input_value(driver, input_element, new_text):
         """, input_element, new_text)
 
 
-def extract_input_values(driver):
+def extract_input_values(driver: WebDriver | BannerDriver) -> dict[str, tuple[WebElement, str]]:
     """
     Extract the values of all input elements in a Banner form.
     :param driver: webdriver object
