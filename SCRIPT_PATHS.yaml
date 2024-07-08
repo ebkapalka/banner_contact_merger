@@ -1,0 +1,22 @@
+# 'c' (create) operations
+add_emails: "bannerdriver/js_scripts/c/add_emails.js"
+add_phone_numbers: "bannerdriver/js_scripts/c/add_phone_numbers.js"
+add_addresses: "bannerdriver/js_scripts/c/add_addresses.js"
+add_test_scores: "bannerdriver/js_scripts/c/add_test_scores.js"
+
+# 'r' (read) operations
+get_emails: "bannerdriver/js_scripts/r/get_emails.js"
+get_phone_numbers: "bannerdriver/js_scripts/r/get_phone_numbers.js"
+get_addresses: "bannerdriver/js_scripts/r/get_addresses.js"
+get_test_scores: "bannerdriver/js_scripts/r/get_test_scores.js"
+
+# 'd' (delete)  operations
+delete_emails: "bannerdriver/js_scripts/d/delete_email.js"
+delete_phone_numbers: "bannerdriver/js_scripts/d/delete_phone_number.js"
+delete_addresses: "bannerdriver/js_scripts/d/delete_address.js"
+delete_test_scores: "bannerdriver/js_scripts/d/delete_test_score.js"
+delete_alt_ids: "bannerdriver/js_scripts/d/delete_alt_id.js"
+
+# other operations
+await_title_update: "bannerdriver/js_scripts/await_title_update.js"
+# Add more scripts as needed
