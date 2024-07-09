@@ -83,3 +83,15 @@ Those two functions make up the vast majority of compute time in the application
 <ins>Finishing up:</ins>
 
 1. Export the command queue to a CSV file for review.
+
+# <div align="center">Usage</div>
+
+# <div align="center">Installation</div>
+
+# <div align="center">Configuration</div>
+
+# <div align="center">Running the Application</div>
+
+# <div align="center">License</div>
+
+Banner Contact Merger is licensed under the MIT License.  See the LICENSE.txt file for more information.
