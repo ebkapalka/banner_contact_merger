@@ -56,36 +56,49 @@ def update_input_value(driver: WebDriver | BannerDriver, input_element: WebEleme
     """
     driver = get_driver(driver)
     switch_iframe(driver)
-
     element_type = driver.execute_script(
         "return arguments[0].parentElement.getAttribute('data-widget')",
         input_element
     )
 
     if element_type == 'checkbox':
-        is_checked = driver.execute_script("return arguments[0].checked", input_element)
         should_check = new_text.lower() in ['true', 'checked']
-        if is_checked != should_check:
-            driver.execute_script("arguments[0].click()", input_element)
+        driver.execute_script("""
+            var inputElement = arguments[0];
+            var shouldCheck = arguments[1];
+            var maxAttempts = 100;
+
+            function updateCheckbox() {
+                var isChecked = inputElement.getAttribute('aria-checked') === 'true';
+                if (isChecked !== shouldCheck && maxAttempts > 0) {
+                    inputElement.click();
+                    maxAttempts--;
+                    setTimeout(updateCheckbox, 100);
+                } else if (maxAttempts === 0) {
+                    console.error("Checkbox state did not update after 100 attempts");
+                }
+            }
+
+            updateCheckbox();
+        """, input_element, should_check)
     else:
-        # Use JavaScript to clear and set the input value, simulate pressing Enter, and wait for title attribute update
         driver.execute_script("""
             var inputElement = arguments[0];
             var newValue = arguments[1];
+            var maxAttempts = 100;
 
-            // Clear the input value
-            inputElement.value = '';
+            function updateInput() {
+                // Clear the input value
+                inputElement.value = '';
 
-            // Function to simulate typing each character
-            function simulateTyping(input, value) {
-                input.value = value;
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-                input.dispatchEvent(new Event('change', { bubbles: true }));
-                input.blur();
-            }
+                // Set the new value
+                inputElement.value = newValue;
 
-            // Function to simulate pressing Enter
-            function simulateEnter(input) {
+                // Trigger the input and change events
+                inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+                inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+
+                // Function to simulate pressing Enter
                 var event = new KeyboardEvent('keydown', {
                     bubbles: true,
                     cancelable: true,
@@ -93,48 +106,18 @@ def update_input_value(driver: WebDriver | BannerDriver, input_element: WebEleme
                     code: 'Enter',
                     keyCode: 13
                 });
-                input.dispatchEvent(event);
+                inputElement.dispatchEvent(event);
+
+                // Check if the title attribute matches the new value
+                if (inputElement.title !== newValue && maxAttempts > 0) {
+                    maxAttempts--;
+                    setTimeout(updateInput, 100);  // Retry after 100ms
+                } else if (maxAttempts === 0) {
+                    console.error("Title attribute did not update after 100 attempts");
+                }
             }
 
-            // Set the new value and simulate typing and pressing Enter
-            simulateTyping(inputElement, newValue);
-            simulateEnter(inputElement);
-
-            return new Promise(function(resolve, reject) {
-                var maxAttempts = 50;  // maximum number of polling attempts
-                var attempts = 0;
-                var interval = setInterval(function() {
-                    if (inputElement.title === newValue) {
-                        clearInterval(interval);
-                        resolve();
-                    }
-                    attempts++;
-                    if (attempts >= maxAttempts) {
-                        clearInterval(interval);
-                        reject(new Error("Title attribute did not update"));
-                    }
-                }, 100);  // polling interval in milliseconds
-            });
-        """, input_element, new_text)
-
-        # Wait for the promise to resolve
-        driver.execute_async_script("""
-            var callback = arguments[arguments.length - 1];
-            var inputElement = arguments[0];
-            var newValue = arguments[1];
-            var maxAttempts = 50;
-            var attempts = 0;
-            var interval = setInterval(function() {
-                if (inputElement.title === newValue) {
-                    clearInterval(interval);
-                    callback();
-                }
-                attempts++;
-                if (attempts >= maxAttempts) {
-                    clearInterval(interval);
-                    callback(new Error("Title attribute did not update"));
-                }
-            }, 100);
+            updateInput();
         """, input_element, new_text)
 
 
@@ -157,7 +140,8 @@ def extract_input_values(driver: WebDriver | BannerDriver) -> dict[str, tuple[We
             if (isVisible(div)) {
                 var label = div.querySelector(':scope > label');
                 var input = div.querySelector(':scope > input');
-                if (label && input) {
+                var button = div.querySelector(':scope > button');
+                if (label && (input || button)) {
                     var labelText = label.innerText.trim();
                     if (labelCount[labelText] === undefined) {
                         labelCount[labelText] = 0;
@@ -170,10 +154,11 @@ def extract_input_values(driver: WebDriver | BannerDriver) -> dict[str, tuple[We
                     var inputValue;
                     if (div.getAttribute('data-widget') === 'checkbox') {
                         inputValue = input.checked ? 'checked' : 'unchecked';
+                        data[labelKey] = {element: button, value: inputValue};
                     } else {
                         inputValue = input.value;
+                        data[labelKey] = {element: input, value: inputValue};
                     }
-                    data[labelKey] = {element: input, value: inputValue};
                 }
             }
         });
