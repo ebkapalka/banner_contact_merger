@@ -60,6 +60,7 @@ Now that we have the elements themselves (returned from the function above), upd
 3. Interact with the element based on the `data-widget` attribute:
     - For `textinput` elements, set the value of the input element to the desired value. `datefield` elements are handled the same way, although some tricks are needed to keep the value from resetting.
     - For `checkbox` elements, click the button to toggle the checkbox.
+4. Wait for the element's 'value' attribute (for text / dates) or 'aria-checked' attribute (for checkboxes) to match the desired value.
 
 Deciding what to update and what to delete is done by Python, but the actual updating is done by Javascript.  This allows for a more robust application that can be updated without having to change the Python application itself.
 
