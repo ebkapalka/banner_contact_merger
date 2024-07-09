@@ -3,6 +3,7 @@ add_emails: "bannerdriver/js_scripts/c/add_emails.js"
 add_phone_numbers: "bannerdriver/js_scripts/c/add_phone_numbers.js"
 add_addresses: "bannerdriver/js_scripts/c/add_addresses.js"
 add_test_scores: "bannerdriver/js_scripts/c/add_test_scores.js"
+update_input_val: "bannerdriver/js_scripts/c/update_input_val.js"
 
 # 'r' (read) operations
 get_emails: "bannerdriver/js_scripts/r/get_emails.js"
