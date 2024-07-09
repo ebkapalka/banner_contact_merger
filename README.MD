@@ -65,7 +65,7 @@ Deciding what to update and what to delete is done by Python, but the actual upd
 
 ## <div align="center">The Rest</div>
 
-Those two functions make up the vast majority of compute time in the application -- the rest of it is the framework holding the scripts together, the logic to decide what stays and what goes, and the "command queue" that is used to store and dish out commands.  The application runs on two threads -- a "Bad Worker" thread and a "Good Worker" thread, only interacting via the command queue.  The bad worker is assigned the GID ("**G**enerated **ID**", aka the Student ID) of the duplicate  / "bad" record and the good worker is assigned the GID of the destination / "good" record. The <u>"Bad Worker"</u> does the following:
+Those two functions make up the vast majority of compute time in the application -- the rest of it is the framework holding the scripts together, the logic to decide what stays and what goes, and the "command queue" that is used to store and dish out commands.  The application runs on two threads -- a "Bad Worker" thread and a "Good Worker" thread, only interacting via the command queue.  The bad worker is assigned the GID ("**G**enerated **ID**", aka the Student ID) of the duplicate  / "bad" record and the good worker is assigned the GID of the destination / "good" record. The <ins>"Bad Worker"</ins> does the following:
 
 1. Leaf through the forms on the duplicate record using Selenium and a handful of Javascript scripts and extract the values.  The forms and pages are always the same, although some may not contain relevant information.
 2. Identify any pieces of information that should be reflected in the "Good Worker"'s record. 
@@ -73,13 +73,13 @@ Those two functions make up the vast majority of compute time in the application
 4. If relevant, delete the data from the current (duplicate / "bad") record.
 5. Continue for all fields on all forms.
 
-<u>"Good Worker":</u>
+<ins>"Good Worker":</ins>
 
 1. Poll the command queue for any commands that are meant for it.  Eventually this application may support multiple workers of each type, but for now there is only one of each.  This structure makes it easy to add more workers if needed, though.
 2. "Check out" the command and begin working on it.
 3. Navigate to the form and tab specified in the command and add / update the values as specified.
 4. "Check in" the command and move on to the next one, for all commands in the queue.  If there are no commands, the worker will wait until there are.
 
-<u>Finishing up:</u>
+<ins>Finishing up:</ins>
 
 1. Export the command queue to a CSV file for review.
