@@ -78,7 +78,7 @@ Those two functions make up the vast majority of compute time in the application
 1. Poll the command queue for any commands that are meant for it.  Eventually this application may support multiple workers of each type, but for now there is only one of each.  This structure makes it easy to add more workers if needed, though.
 2. "Check out" the command and begin working on it.
 3. Navigate to the form and tab specified in the command and add / update the values as specified.
-4. "Check in" the command and move on to the next one, for all commands in the queue.  If there are no commands, the worker will wait until there are.
+4. "Check in" the command, marking it as complete and adding a note about its outcome ("success", "failed", "some other text") and move on to the next one, consecutively for all commands in the queue.  If there are currently no commands, the worker will wait until there are.
 
 <ins>Finishing up:</ins>
 
