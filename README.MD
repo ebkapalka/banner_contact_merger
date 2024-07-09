@@ -34,6 +34,7 @@ Before getting into how this works, you must understand the layout of the websit
     <!-- possibly other elements here -->
 </div>
 ```
+So the process of extracting the values is as follows:
 
 1. Identify all divs that contain a top-level label and input element that also have the `data-widget` attribute.
 2. Filter this list of divs to VISIBLE elements only.
@@ -62,7 +63,7 @@ Deciding what to update and what to delete is done by Python, but the actual upd
 
 ## <div align="center">The Rest</div>
 
-The rest of the application is the framework holding the scripts together, the logic to decide what stays and what goes, and the "command queue" that is used to store and dish out commands.  The application runs on two threads -- a "Bad Worker" thread and a "Good Worker" thread, only interacting via the command queue.  The bad worker is assigned the GID ("**G**enerated **ID**", aka the Student ID) of the duplicate  / "bad" record. The "Bad Worker" does the following:
+The rest of the application is the framework holding the scripts together, the logic to decide what stays and what goes, and the "command queue" that is used to store and dish out commands.  The application runs on two threads -- a "Bad Worker" thread and a "Good Worker" thread, only interacting via the command queue.  The bad worker is assigned the GID ("**G**enerated **ID**", aka the Student ID) of the duplicate  / "bad" record and the good worker is assigned the destination / "good" GID. The "Bad Worker" does the following:
 
 1. Leaf through the forms on the duplicate record using Selenium and a handful of Javascript scripts and extract the values.  The forms and pages are always the same, although some may not contain relevant information.
 2. Identify any pieces of information that should be reflected in the "Good Worker"'s record. 
