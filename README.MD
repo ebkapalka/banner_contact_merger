@@ -1,9 +1,11 @@
 # <div align="center">Banner Contact Merger</div>
 #### <div align="center">Eric Kapalka  |  2024-06-08</div>
 
-This application seeks to automate the tedious and error-prone process of merging contacts in Elucian Banner.  This is the n'th attempt at making such an application, and follows a different design pattern than previous attempts, employing Python only as a framework to hold together a collection of Javascript scripts that do the heavy lifting.  These scripts, provided they maintain the same inputs and outputs, can be updated instead of the Python application when the website changes, making this application more robust and easier to maintain.  Not to mention faster, as the Python application is only used to run the scripts, not to do the work itself.
+Ellucian Banner is a massive database application that holds the bulk of student, faculty, and staff information at many universities across the country.  With routine usage, duplicate contact records are inevitable, and this application seeks to simplify the remediation process and minimize the opportunities for human error. Banner is a spiderweb of tables and forms that makes each campus's implementation almost entirely unique, and many (likely most) deployments have been live for decades and are customized to the point of being unrecognizable.  As it currently stands, the merging process involves copying information from one contact to another, then deleting the data from those fields on the old contact.  This has to be done for *every* relevant field in *every* relevant form, after which the duplicated record is left an empty shell and can be safely ignored.  This process is tedious, time-consuming, and error-prone, which is where the use of automation comes in.
 
-The most important functions are in functions_general.py, which is a collection of general functions that are used in conjunction with the scripts in the c, r, and d folders.  Namely the functions extract_input_values and update_input_values, around which the entirety of this application is built.  These functions are used to extract and update the values of the input fields on the website, respectively.  Here is the gist of how they work:
+This is the n'th attempt at making such an application, and follows a different design pattern than previous attempts, employing Python only as a framework to hold together a collection of Javascript scripts that do the heavy lifting.  These scripts, provided they maintain the same inputs and outputs, can be updated instead of the Python application when the website changes, making this application more robust and easier to maintain.  Not to mention faster, as the Python application is only used to run the scripts, not to do the work itself.
+
+The most important functions are in *functions_general.py*, which is a collection of general functions that are used in conjunction with the scripts in the *js_scripts/c/*, *js_scripts/r/*, and *js_scripts/d/* folders (named for **c**reate, **r**ead, and **d**elete operations).  Namely the functions extract_input_values and update_input_values, around which the entirety of this application is built.  These functions are used to extract and update the values of the input fields on the website, respectively.  Here is the gist of how they work:
 
 ## <div align="center">extract_input_values</div>
 
@@ -63,7 +65,7 @@ Deciding what to update and what to delete is done by Python, but the actual upd
 
 ## <div align="center">The Rest</div>
 
-The rest of the application is the framework holding the scripts together, the logic to decide what stays and what goes, and the "command queue" that is used to store and dish out commands.  The application runs on two threads -- a "Bad Worker" thread and a "Good Worker" thread, only interacting via the command queue.  The bad worker is assigned the GID ("**G**enerated **ID**", aka the Student ID) of the duplicate  / "bad" record and the good worker is assigned the GID of the destination / "good" record. The "Bad Worker" does the following:
+Those two functions make up the vast majority of compute time in the application -- the rest of it is the framework holding the scripts together, the logic to decide what stays and what goes, and the "command queue" that is used to store and dish out commands.  The application runs on two threads -- a "Bad Worker" thread and a "Good Worker" thread, only interacting via the command queue.  The bad worker is assigned the GID ("**G**enerated **ID**", aka the Student ID) of the duplicate  / "bad" record and the good worker is assigned the GID of the destination / "good" record. The <u>"Bad Worker"</u> does the following:
 
 1. Leaf through the forms on the duplicate record using Selenium and a handful of Javascript scripts and extract the values.  The forms and pages are always the same, although some may not contain relevant information.
 2. Identify any pieces of information that should be reflected in the "Good Worker"'s record. 
@@ -71,13 +73,13 @@ The rest of the application is the framework holding the scripts together, the l
 4. If relevant, delete the data from the current (duplicate / "bad") record.
 5. Continue for all fields on all forms.
 
-"Good Worker":
+<u>"Good Worker":</u>
 
 1. Poll the command queue for any commands that are meant for it.  Eventually this application may support multiple workers of each type, but for now there is only one of each.  This structure makes it easy to add more workers if needed, though.
 2. "Check out" the command and begin working on it.
 3. Navigate to the form and tab specified in the command and add / update the values as specified.
 4. "Check in" the command and move on to the next one, for all commands in the queue.  If there are no commands, the worker will wait until there are.
 
-Finishing up:
+<u>Finishing up:</u>
 
 1. Export the command queue to a CSV file for review.
