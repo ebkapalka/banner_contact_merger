@@ -61,7 +61,7 @@ def update_input_value(driver: WebDriver | BannerDriver, input_element: WebEleme
                 inputElement.dispatchEvent(new Event('input', { bubbles: true }));
                 inputElement.dispatchEvent(new Event('change', { bubbles: true }));
 
-                // Function to simulate pressing Enter
+                // Simulate pressing Enter
                 var event = new KeyboardEvent('keydown', {
                     bubbles: true,
                     cancelable: true,
