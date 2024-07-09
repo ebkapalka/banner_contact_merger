@@ -1,13 +1,13 @@
 # <div align="center">Banner Contact Merger</div>
 #### <div align="center">Eric Kapalka  |  2024-06-08</div>
 
-This application seeks to automate the tedious and error-prone process of merging contacts in Elucian Banner.  This is the n'th attempt at making such an application, and follows a different design pattern than previous attempts, employing Python only as a framework to hold together a collection of Javascript scripts that do the heavy lifting.  These scripts, provided they maintain the same inputs and putputs, can be updated instead of the Python application when the website changes, making this application more robust and easier to maintain.  Not to mention faster, as the Python application is only used to run the scripts, not to do the work itself.
+This application seeks to automate the tedious and error-prone process of merging contacts in Elucian Banner.  This is the n'th attempt at making such an application, and follows a different design pattern than previous attempts, employing Python only as a framework to hold together a collection of Javascript scripts that do the heavy lifting.  These scripts, provided they maintain the same inputs and outputs, can be updated instead of the Python application when the website changes, making this application more robust and easier to maintain.  Not to mention faster, as the Python application is only used to run the scripts, not to do the work itself.
 
 The most important functions are in functions_general.py, which is a collection of general functions that are used in conjunction with the scripts in the c, r, and d folders.  Namely the functions extract_input_values and update_input_values, around which the entirety of this application is built.  These functions are used to extract and update the values of the input fields on the website, respectively.  Here is the gist of how they work:
 
 ## <div align="center">extract_input_values</div>
 
-Before getting into how this works, you must understand the layout of the website first.  ALL input elements (be it text, date, or checkbox) have a corresponding label to explain what they are.  These elemtnts are always wrapped in a `<div>` tag with a `data-widget` attribute of "textinput", "datefield", or "checkbox".  In the case of a datefield, the group also contains a date picker; in the case of a checkbox the group always contains a button.  So all possible element configurations to look for are the following:
+Before getting into how this works, you must understand the layout of the website first.  ALL input elements (be it text, date, or checkbox) have a corresponding label to explain what they are.  These elements are always wrapped in a `<div>` tag with a `data-widget` attribute of "textinput", "datefield", or "checkbox".  In the case of a datefield, the group also contains a date picker; in the case of a checkbox the group always contains a button.  So all possible element configurations to look for are the following:
 
 ```html
 <div data-widget="textinput">
@@ -54,7 +54,7 @@ Now that we have the elements themselves (returned from the function above), upd
 
 1. Identify the element's parent div
 2. Extract the parent div's `data-widget` attribute
-3. Interact with the elemment based on the `data-widget` attribute:
+3. Interact with the element based on the `data-widget` attribute:
     - For `textinput` elements, set the value of the input element to the desired value. `datefield` elements are handled the same way, although some tricks are needed to keep the value from resetting.
     - For `checkbox` elements, click the button to toggle the checkbox.
 
