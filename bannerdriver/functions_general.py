@@ -9,43 +9,6 @@ import time
 from bannerdriver.drivers.driver_base import BannerDriver
 
 
-def update_input_value_legacy(driver: WebDriver | BannerDriver, input_element: WebElement, new_text: str):
-    """
-    Update the value of an input element in a Banner form.
-    :param driver: webdriver object
-    :param input_element: the input element to update
-    :param new_text: new text to enter into the input element
-    :return: None
-    """
-    driver = get_driver(driver)
-    switch_iframe(driver)
-    element_type = driver.execute_script(
-        "return arguments[0].parentElement.getAttribute('data-widget')",
-        input_element
-    )
-
-    if element_type == 'checkbox':
-        is_checked = driver.execute_script("return arguments[0].checked", input_element)
-        should_check = new_text.lower() in ['true', 'checked']
-        if is_checked != should_check:
-            driver.execute_script("arguments[0].click()", input_element)
-    else:
-        # Clear and set the input value with JavaScript
-        driver.execute_script("""
-            arguments[0].value = '';
-            arguments[0].value = arguments[1];
-            arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
-            arguments[0].dispatchEvent(new Event('change', { bubbles: true }));
-        """, input_element, new_text)
-
-        # Simulate pressing Enter to save the value
-        actions = ActionChains(driver)
-        actions.move_to_element(input_element).click()
-        actions.send_keys(Keys.RETURN)
-        actions.perform()
-        time.sleep(0.5)
-
-
 def update_input_value(driver: WebDriver | BannerDriver, input_element: WebElement, new_text: str):
     """
     Update the value of an input element in a Banner form using JavaScript only.
