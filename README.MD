@@ -50,10 +50,10 @@ The most important piece of this puzzle being that multiple elements with the sa
 ## <div align="center">update_input_values</div>
 
 
-Now that we have the elements themselves (returned from the function above), updating the values associated with them is trivial and simply a matter of working with the website to get the desired results.  `update_input_values` takes the element itself as input and does the following:
+Now that we have the elements themselves (returned from the function above), updating the values associated with them is trivial and simply a matter of working with the website to get the desired results.  `update_input_values` takes the element itself and desired value as input and does the following:
 
-1. Identify the element's parent div
-2. Extract the parent div's `data-widget` attribute
+1. Identify the element's parent div.
+2. Extract the parent div's `data-widget` attribute.
 3. Interact with the element based on the `data-widget` attribute:
     - For `textinput` elements, set the value of the input element to the desired value. `datefield` elements are handled the same way, although some tricks are needed to keep the value from resetting.
     - For `checkbox` elements, click the button to toggle the checkbox.
